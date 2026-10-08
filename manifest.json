@@ -1,0 +1,18 @@
+{
+  "id": "https://marinkopavlovic.github.io/OBK-App/",
+  "name": "Objektermittlungs-App",
+  "short_name": "Objektermittlung",
+  "description": "Objekte vor Ort erfassen und in der freigegebenen Excel-Datei speichern.",
+  "lang": "de-DE",
+  "start_url": "https://marinkopavlovic.github.io/OBK-App/",
+  "scope": "https://marinkopavlovic.github.io/OBK-App/",
+  "display": "standalone",
+  "orientation": "any",
+  "background_color": "#f7f8f5",
+  "theme_color": "#176b4b",
+  "icons": [
+    { "src": "icons/app-192.png", "sizes": "192x192", "type": "image/png" },
+    { "src": "icons/app-512.png", "sizes": "512x512", "type": "image/png" },
+    { "src": "icons/app-maskable-512.png", "sizes": "512x512", "type": "image/png", "purpose": "maskable" }
+  ]
+}
