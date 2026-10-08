@@ -65,3 +65,9 @@ Ladefehler löschen den hinterlegten Ordnerlink nicht mehr. Die App zeigt stattd
 Um bewusst eine andere Liste zu wählen, „OneDrive-Ordner“ öffnen und den Ordnerlink erneut speichern oder bei einem Ladefehler „Andere Datei auswählen“ verwenden. Bei nicht synchronisierten Änderungen wird der Listenwechsel weiterhin verhindert.
 
 Für diese Korrektur index.html und service-worker.js ersetzen. Die Offline-Funktionen aus Version 4 sind enthalten. Keine Browserdaten löschen: dort können nicht synchronisierte Änderungen liegen. Die App einmal online schließen und neu öffnen, damit die neue Version geladen wird. Ein echter Microsoft-Login und Upload auf dem iPad müssen nach dem Ersetzen geprüft werden.
+
+## Microsoft-Anmeldung (Version 6)
+
+Timeouts bei der stillen Token-Erneuerung verlangen eine erneute Microsoft-Anmeldung, keinen neuen Ordnerlink. „Microsoft neu anmelden“ bleibt auch bei vorhandenem Konto bedienbar. Bei einem Ladefehler führt der gleichnamige Knopf direkt zur Anmeldung im Hauptfenster; nach der Rückkehr wird die Dateiauswahl erneut gestartet. Der Ordnerlink bleibt unverändert. Automatische Synchronisation öffnet keine Anmeldefenster. Offline-Daten werden vor der Weiterleitung gesichert. Die App startet im unsichtbaren Microsoft-Anmeldeframe weder Microsoft-Anmeldung noch Offline-Datenspeicher. Die bestehende registrierte Redirect-URI bleibt erhalten.
+
+Für diese Version `index.html` und `service-worker.js` ersetzen, anschließend online neu laden. Unter „Objekterfassung“ muss **Version 6** sichtbar sein. Wird die alte Version angezeigt, in Safari die App-Adresse online neu öffnen und nach erfolgtem Laden nochmals neu laden. Browserdaten nicht löschen. Anschließend Potenzialliste laden; wenn erforderlich „Microsoft neu anmelden“ im Fehlerfeld wählen. Nach der Rückkehr erscheint die Auswahl beziehungsweise die bereits gemerkte Datei wird geladen. Der echte Microsoft-/iPad-Test bleibt erforderlich.

@@ -17,7 +17,7 @@
 <body>
 <div class="shell">
  <header class="top"><div class="brand"><div class="logo"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M4 20h16M6 20V8l6-4 6 4v12M9 20v-6h6v6M9 9h.01M15 9h.01" stroke-linecap="round" stroke-linejoin="round"/></svg></div><div><strong>Objektermittlungs-App</strong><small>Erfassung vor Ort</small></div></div><div class="top-actions"><div id="userInfo" style="display:flex;align-items:center;padding:0 10px;font-size:13px;"></div><button class="btn" id="loginBtn" type="button">Microsoft Login</button><button class="btn" id="folderLinkBtn" type="button">OneDrive-Ordner</button><button class="btn primary" id="oneDriveOpenBtn" type="button" disabled>Potenzialliste laden</button><button class="btn primary" id="closeAppBtn" type="button" disabled>Liste schließen</button></div></header>
- <div id="syncBar" role="status" aria-live="polite" style="padding:12px 20px;background:#eef5ff;border-radius:12px;margin:12px 0;display:flex;gap:12px;align-items:center;flex-wrap:wrap"><span id="syncStatus" style="flex:1">Offline-Speicher wird geprüft …</span><button class="btn" id="syncNowBtn" type="button">Jetzt synchronisieren</button><button class="btn" id="backupBtn" type="button">Sicherung herunterladen</button></div><div class="headline"><h1>Objekterfassung</h1><p id="workbookSummary">Potenzial</p></div>
+ <div id="syncBar" role="status" aria-live="polite" style="padding:12px 20px;background:#eef5ff;border-radius:12px;margin:12px 0;display:flex;gap:12px;align-items:center;flex-wrap:wrap"><span id="syncStatus" style="flex:1">Offline-Speicher wird geprüft …</span><button class="btn" id="syncNowBtn" type="button">Jetzt synchronisieren</button><button class="btn" id="backupBtn" type="button">Sicherung herunterladen</button></div><div class="headline"><h1>Objekterfassung <small style="font-size:11px;color:#66756d">Version 6</small></h1><p id="workbookSummary">Potenzial</p></div>
  <section class="progress-panel" aria-label="Erfassungsfortschritt"><div class="progress-heading"><h2>Fortschritt</h2><span id="progressPercent">0 % erledigt</span></div><div class="progress-track"><div id="progressBar" class="progress-fill"></div></div><div class="progress-grid"><div class="progress-stat"><span>Gesamtobjekte</span><strong id="progressTotal">0</strong></div><div class="progress-stat"><span>Bearbeitet</span><strong id="progressDone">0</strong></div><div class="progress-stat"><span>Offen</span><strong id="progressOpen">0</strong></div><div class="progress-stat"><span>ET ermittelt</span><strong id="progressIdentified">0</strong></div><div class="progress-stat"><span>Kontaktiert</span><strong id="progressContacted">0</strong></div><div class="progress-stat"><span>Nicht ermittelt</span><strong id="progressUnidentified">0</strong></div><div class="progress-stat"><span>Gestattungen</span><strong id="progressContracts">0 <small id="progressContractWE">(0 WE)</small></strong></div></div></section>
 <section class="analysis-panel" aria-label="Auswertung"><div class="analysis-heading"><h2>Auswertung</h2><button class="analysis-toggle" id="toggleAnalysisBtn" type="button" aria-expanded="false">Auswertung anzeigen</button></div><div class="analysis-grid"><div class="progress-stat overdue-stat"><span>Warnungen &gt;14 Tage</span><div id="progressOverdueEntry" class="warning-entry"><strong><span id="progressOverdue" class="warning-value">0</span> <small id="progressOverdueLabel" class="warning-units">Objekte</small></strong><small id="progressOverdueWE" class="warning-units">(0 WE)</small></div></div><div class="progress-stat"><span>Nicht vermarktbar</span><strong id="progressUnmarketable">0 <small id="progressUnmarketableWE">(0 WE)</small></strong><small id="progressUnmarketablePercent">0 % der Objekte</small></div><div class="progress-stat"><span>ET hat kein Interesse</span><strong id="progressNoInterest">0 <small id="progressNoInterestWE">(0 WE)</small></strong><small id="progressNoInterestPercent">0 % der Objekte</small></div><div class="progress-stat"><span>Offene ET im Objekt</span><strong id="progressPapersAtOwner">0 <small id="progressPapersAtOwnerWE">(0 WE)</small></strong><small id="progressPapersAtOwnerPercent">0 % der Objekte</small></div><div class="progress-stat"><span>Offene HV's</span><strong id="progressOpenHV">0 <small id="progressOpenHVWE">(0 WE)</small></strong><small id="progressOpenHVPercent">0 % der Objekte</small></div><div class="progress-stat quote-stat"><span>Quote</span><strong id="progressQuote">0 %</strong></div></div></section>
  <main class="workspace" id="workspace">
@@ -171,7 +171,7 @@ async function bootOffline(){
  document.addEventListener('visibilitychange',()=>{if(document.visibilityState==='visible')retrySync();else persist()});
  // Safari may not deliver an online event when a connection recovers without Wi-Fi changing.
  setInterval(()=>{if(document.visibilityState==='visible')retrySync()},30000);
- if(navigator.onLine){await initializeMicrosoft();retrySync()}else{
+ if(navigator.onLine){await initializeMicrosoft();await resumeAfterMicrosoftLogin();retrySync()}else{
  document.getElementById('userInfo').textContent='Offline';document.getElementById('loginBtn').disabled=false;
  }
 }
@@ -304,9 +304,44 @@ async function ensureMsalReady(){
  await msalRedirectHandling;
 }
 function getSignedInAccount(){if(!msalInstance)return null;let account=msalInstance.getActiveAccount();if(!account)account=msalInstance.getAllAccounts()[0]||null;if(account)msalInstance.setActiveAccount(account);return account}
-async function updateLoginState(){await ensureMsalReady();const account=getSignedInAccount(),loginButton=document.getElementById('loginBtn'),folderButton=document.getElementById('folderLinkBtn');document.getElementById('userInfo').textContent=account?(account.name||account.username||''):'Bitte anmelden';loginButton.textContent=account?'Microsoft angemeldet':'Microsoft Login';loginButton.disabled=!!account;folderButton.disabled=!account;updateOneDriveOpenButton()}
-async function getAccessToken(allowPopup=true){await ensureMsalReady();const account=getSignedInAccount();if(!account)throw Error('Bitte zuerst über „Microsoft Login“ anmelden.');try{const response=await msalInstance.acquireTokenSilent({account,scopes:['Files.ReadWrite']});return response.accessToken}catch(err){if(allowPopup&&err instanceof msal.InteractionRequiredAuthError){const response=await msalInstance.acquireTokenPopup({account,scopes:['Files.ReadWrite']});if(response.account)msalInstance.setActiveAccount(response.account);return response.accessToken}throw err}}
-async function loginMicrosoft(){if(!window.OBJEKTERMITTLUNGS_APP_CONFIG?.clientId||window.OBJEKTERMITTLUNGS_APP_CONFIG.clientId.includes('HIER_EINTRAGEN')){toast('Die Microsoft-Anmeldung ist noch nicht eingerichtet. Bitte den App-Betreiber kontaktieren.');return}if(location.origin!=='https://marinkopavlovic.github.io'||!location.pathname.startsWith('/OBK-App/')){toast('Bitte die veröffentlichte App unter https://marinkopavlovic.github.io/OBK-App/ öffnen.');return}try{if(!persist())throw Error('Bitte zuerst eine Sicherung herunterladen; lokale Speicherung ist nicht verfügbar.');await ensureMsalReady();await msalInstance.loginRedirect(loginRequest)}catch(err){console.error(err);toast('Microsoft-Anmeldung fehlgeschlagen: '+(err.message||'Bitte erneut versuchen.'))}}
+async function updateLoginState(){await ensureMsalReady();const account=getSignedInAccount(),loginButton=document.getElementById('loginBtn'),folderButton=document.getElementById('folderLinkBtn');document.getElementById('userInfo').textContent=account?(account.name||account.username||''):'Bitte anmelden';loginButton.textContent=account?'Microsoft angemeldet':'Microsoft Login';loginButton.disabled=false;loginButton.textContent=account?'Microsoft neu anmelden':'Microsoft Login';folderButton.disabled=!account;updateOneDriveOpenButton()}
+const microsoftResumeKey='objektermittlungs.microsoftResume.v1';
+function isMicrosoftInteractionError(err){
+ const code=String(err?.errorCode||'').toLowerCase();
+ return ['monitor_window_timeout','token_renewal_error','interaction_required','login_required','consent_required','no_tokens_found','invalid_grant'].includes(code)||
+ !!(window.msal?.InteractionRequiredAuthError&&err instanceof window.msal.InteractionRequiredAuthError);
+}
+function microsoftLoginRequired(){
+ const err=Error('Die Microsoft-Sitzung muss erneuert werden. Bitte „Microsoft neu anmelden“ antippen. Der Ordnerlink muss nicht erneut eingegeben werden.');
+ err.authRequired=true;return err;
+}
+async function getAccessToken(allowInteraction=true){
+ await ensureMsalReady();const account=getSignedInAccount();if(!account)throw microsoftLoginRequired();
+ try{const response=await msalInstance.acquireTokenSilent({account,scopes:['Files.ReadWrite']});return response.accessToken}
+ catch(err){if(isMicrosoftInteractionError(err)){
+  const button=document.getElementById('loginBtn');button.disabled=false;button.textContent='Microsoft neu anmelden';
+  // Background sync never navigates away. Reauthentication is a deliberate main-window action.
+  throw microsoftLoginRequired();
+ }throw err}
+}
+async function loginMicrosoft(action){
+ if(!window.OBJEKTERMITTLUNGS_APP_CONFIG?.clientId||window.OBJEKTERMITTLUNGS_APP_CONFIG.clientId.includes('HIER_EINTRAGEN')){toast('Die Microsoft-Anmeldung ist noch nicht eingerichtet. Bitte den App-Betreiber kontaktieren.');return}
+ if(location.origin!=='https://marinkopavlovic.github.io'||!location.pathname.startsWith('/OBK-App/')){toast('Bitte die veröffentlichte App unter https://marinkopavlovic.github.io/OBK-App/ öffnen.');return}
+ const resume=typeof action==='string'?action:dirtyAdsIds.size&&sourceOneDriveItem?'sync':'none';
+ try{
+  if(!persist())throw Error('Bitte zuerst eine Sicherung herunterladen; lokale Speicherung ist nicht verfügbar.');
+  await ensureMsalReady();sessionStorage.setItem(microsoftResumeKey,JSON.stringify({action:resume,created:Date.now()}));
+  const account=getSignedInAccount();await msalInstance.loginRedirect({...loginRequest,prompt:account?'select_account':undefined});
+ }catch(err){try{sessionStorage.removeItem(microsoftResumeKey)}catch{}console.error(err);toast('Microsoft-Anmeldung fehlgeschlagen: '+(err.message||'Bitte erneut versuchen.'))}
+}
+async function resumeAfterMicrosoftLogin(){
+ let intent;try{intent=JSON.parse(sessionStorage.getItem(microsoftResumeKey)||'null');sessionStorage.removeItem(microsoftResumeKey)}catch{return}
+ if(!intent||Date.now()-intent.created>15*60*1000||!getSignedInAccount())return;
+ const result=await msalRedirectHandling;if(!result?.account)return;
+ // Consume first: failed retries must never trigger an endless sign-in loop.
+ if(intent.action==='open-list')await openOneDriveExcel();
+ else if(intent.action==='sync')await syncOneDrive(false);
+}
 async function initializeMicrosoft(){const loginButton=document.getElementById('loginBtn'),folderButton=document.getElementById('folderLinkBtn'),openButton=document.getElementById('oneDriveOpenBtn');loginButton.disabled=true;folderButton.disabled=true;openButton.disabled=true;document.getElementById('userInfo').textContent='Microsoft-Verbindung wird geladen …';try{await updateLoginState()}catch(err){console.error(err);document.getElementById('userInfo').textContent='Microsoft-Verbindung nicht verfügbar';loginButton.disabled=false;loginButton.textContent='Microsoft Login';folderButton.disabled=true;openButton.disabled=true}}
 // Microsoft is initialized after the offline workspace has been restored.
 /* Replaces content by the selected user's existing OneDrive item ID. */
@@ -387,9 +422,9 @@ let oneDriveOpenRunning=false;
 function clearRememberedOneDriveFile(){try{localStorage.removeItem(rememberedFileStorageKey)}catch{}}
 function rememberOneDriveFile(link,item){try{localStorage.setItem(rememberedFileStorageKey,JSON.stringify({link,item,accountId:getSignedInAccount()?.homeAccountId||null}))}catch(err){console.warn('Dateiauswahl konnte nicht gespeichert werden.',err)}}
 function readRememberedOneDriveFile(link){try{const saved=JSON.parse(localStorage.getItem(rememberedFileStorageKey)||'null');return saved?.link===link&&saved.accountId===(getSignedInAccount()?.homeAccountId||null)&&saved.item?.id?saved.item:null}catch{return null}}
-function showOneDriveLoadError(message){
+function showOneDriveLoadError(message,authRequired=false){
  let panel=document.getElementById('oneDriveLoadError');if(!panel){panel=document.createElement('div');panel.id='oneDriveLoadError';panel.setAttribute('role','alert');panel.style.cssText='padding:16px;margin:12px 0;border-radius:12px;background:#fff3df';document.getElementById('syncBar').after(panel)}
- panel.replaceChildren();const text=document.createElement('p');text.textContent=message+' Der hinterlegte Ordner bleibt gespeichert.';panel.append(text);
+ panel.replaceChildren();if(authRequired){const reconnect=document.createElement('button');reconnect.className='btn primary';reconnect.textContent='Microsoft neu anmelden';reconnect.onclick=()=>loginMicrosoft('open-list');panel.append(reconnect)}const text=document.createElement('p');text.textContent=message+' Der hinterlegte Ordner bleibt gespeichert.';panel.append(text);
  const retry=document.createElement('button');retry.className='btn';retry.textContent='Erneut versuchen';retry.onclick=()=>openOneDriveExcel();panel.append(retry);
  const choose=document.createElement('button');choose.className='btn';choose.style.marginLeft='8px';choose.textContent='Andere Datei auswählen';choose.onclick=()=>{clearRememberedOneDriveFile();openOneDriveExcel()};panel.append(choose);
 }
@@ -406,7 +441,7 @@ async function openOneDriveExcel(){
   const savedFolderLink=readSavedOneDriveFolderLink();
   if(!savedFolderLink)throw Error('Bitte zuerst über „OneDrive-Ordner“ einen freigegebenen Ordner hinterlegen.');
   await loadOneDriveExcelFromLink(savedFolderLink);
- }catch(err){const message='Potenzialliste konnte nicht geladen werden: '+(err.message||'Bitte erneut versuchen.');showOneDriveLoadError(message);toast(message)}
+ }catch(err){const message='Potenzialliste konnte nicht geladen werden: '+(err.message||'Bitte erneut versuchen.');showOneDriveLoadError(message,!!err.authRequired);toast(message)}
  finally{oneDriveOpenRunning=false;button.textContent=caption;updateOneDriveOpenButton()}
 }
 async function loadOneDriveExcelFromLink(sharedLink){
@@ -441,7 +476,9 @@ document.getElementById('loginBtn').addEventListener('click',loginMicrosoft);
 updateFolderLinkButton();document.getElementById('folderLinkBtn').addEventListener('click',async()=>{await requestOneDriveFolderLink(readSavedOneDriveFolderLink())});document.getElementById('oneDriveOpenBtn').addEventListener('click',openOneDriveExcel);
 (()=>{try{const canUseServiceWorker='serviceWorker' in navigator&&location.protocol!=='file:'&&location.origin!=='null'&&window.isSecureContext;if(canUseServiceWorker)navigator.serviceWorker.register('./service-worker.js').catch(err=>console.warn('Offline-Cache konnte nicht gestartet werden.',err))}catch(err){console.warn('Service Worker ist in dieser Vorschau nicht verfügbar.',err)}})();
 
-bootOffline();
+// MSAL's silent token iframe returns to this registered URL. Leave its hash untouched
+// and do not start another MSAL instance or acquire the offline workspace lock there.
+if(window.self===window.top)bootOffline();
 </script></body></html>
 
 
