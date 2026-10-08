@@ -57,3 +57,11 @@ Die Synchronisation erfolgt bei laufender App. Für eine vollständig geschlosse
 ### Prüfung
 
 Die Offline-Speicherung, Wiederherstellung, Feldabgleich, Konfliktbehandlung und während eines Uploads neu eingegebenen Änderungen werden mit simuliertem Microsoft-Zugriff geprüft. Ein echter Login und Upload mit deinem Microsoft-Konto sowie das Verhalten auf deinem iPad müssen nach der Bereitstellung geprüft werden.
+
+## Korrektur beim Laden (Version 5)
+
+Ladefehler löschen den hinterlegten Ordnerlink nicht mehr. Die App zeigt stattdessen die Fehlermeldung mit „Erneut versuchen“ und „Andere Datei auswählen“. Nach einem erfolgreichen Import wird die Datei-ID zusammen mit dem Microsoft-Konto und Ordnerlink gespeichert. Beim nächsten Laden wird diese Datei direkt geöffnet. Falls ein Ordner genau eine Excel-Datei und keine Unterordner enthält, wird sie direkt geladen. Bei mehreren Einträgen können auch Unterordner durchsucht werden. Freigaben von OneDrive für Unternehmen über HTTPS auf sharepoint.com werden akzeptiert.
+
+Um bewusst eine andere Liste zu wählen, „OneDrive-Ordner“ öffnen und den Ordnerlink erneut speichern oder bei einem Ladefehler „Andere Datei auswählen“ verwenden. Bei nicht synchronisierten Änderungen wird der Listenwechsel weiterhin verhindert.
+
+Für diese Korrektur index.html und service-worker.js ersetzen. Die Offline-Funktionen aus Version 4 sind enthalten. Keine Browserdaten löschen: dort können nicht synchronisierte Änderungen liegen. Die App einmal online schließen und neu öffnen, damit die neue Version geladen wird. Ein echter Microsoft-Login und Upload auf dem iPad müssen nach dem Ersetzen geprüft werden.
