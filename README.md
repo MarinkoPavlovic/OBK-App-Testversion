@@ -71,3 +71,15 @@ Für diese Korrektur index.html und service-worker.js ersetzen. Die Offline-Funk
 Timeouts bei der stillen Token-Erneuerung verlangen eine erneute Microsoft-Anmeldung, keinen neuen Ordnerlink. „Microsoft neu anmelden“ bleibt auch bei vorhandenem Konto bedienbar. Bei einem Ladefehler führt der gleichnamige Knopf direkt zur Anmeldung im Hauptfenster; nach der Rückkehr wird die Dateiauswahl erneut gestartet. Der Ordnerlink bleibt unverändert. Automatische Synchronisation öffnet keine Anmeldefenster. Offline-Daten werden vor der Weiterleitung gesichert. Die App startet im unsichtbaren Microsoft-Anmeldeframe weder Microsoft-Anmeldung noch Offline-Datenspeicher. Die bestehende registrierte Redirect-URI bleibt erhalten.
 
 Für diese Version `index.html` und `service-worker.js` ersetzen, anschließend online neu laden. Unter „Objekterfassung“ muss **Version 6** sichtbar sein. Wird die alte Version angezeigt, in Safari die App-Adresse online neu öffnen und nach erfolgtem Laden nochmals neu laden. Browserdaten nicht löschen. Anschließend Potenzialliste laden; wenn erforderlich „Microsoft neu anmelden“ im Fehlerfeld wählen. Nach der Rückkehr erscheint die Auswahl beziehungsweise die bereits gemerkte Datei wird geladen. Der echte Microsoft-/iPad-Test bleibt erforderlich.
+
+## Dynamische Webadresse (Version 7)
+
+Die App enthält keine fest eingetragene Hosting-Adresse mehr. Die Rückkehradresse für Microsoft wird aus der gerade geöffneten Webadresse ermittelt, ohne Suchparameter und Fragment. Der genaue Pfad bleibt erhalten: beispielsweise `https://firma.example/objekte/` oder `https://firma.example/objekte/index.html`. Manifest, Startadresse und App-Bereich sind relativ zum Installationsordner.
+
+Auf dem Server `index.html`, `service-worker.js` und `manifest.json` ersetzen. Danach die App online neu laden und prüfen, ob **Version 7** angezeigt wird. `config.js` und bestehende Symbole bleiben unverändert.
+
+Microsoft-Entra-Einrichtung: In der bestehenden App-Registrierung unter **Authentifizierung → Single-page application (SPA)** die tatsächlich verwendete HTTPS-Adresse als Redirect-URI hinzufügen. Mehrere feste Adressen können für dieselbe Client-ID registriert werden. Bei Umzug auf eine andere Adresse braucht es keine Codeänderung; jede verwendete Adresse muss aber bei Microsoft registriert sein. Sonst lehnt Microsoft die Anmeldung mit **AADSTS50011** ab. Wird die App sowohl mit `/` als auch mit `/index.html` geöffnet, entweder eine einheitliche Adresse verwenden oder beide registrieren. Die in Version 6 beschriebene feste Rückkehradresse wird durch diese Regel ersetzt.
+
+Die Offline-Funktionen und Timeout-Korrekturen bleiben enthalten. Browserdaten nicht löschen. Bei einem Wechsel der Domain oder des App-Verzeichnisses können bisherige lokale Daten unter der alten Adresse liegen; offene Änderungen zuerst dort synchronisieren oder als Excel-Sicherung herunterladen. Ein bestehendes Home-Bildschirm-Symbol kann weiter zur alten Adresse führen. In dem Fall die neue App-Adresse in Safari öffnen und bei Bedarf ein neues Symbol anlegen.
+
+Dokumentation: https://learn.microsoft.com/en-us/entra/identity-platform/reply-url
